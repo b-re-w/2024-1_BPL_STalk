@@ -1,4 +1,4 @@
-package io.github.thisisthepy.android
+package io.github.brew.stalk.android
 
 import App
 import android.os.Bundle

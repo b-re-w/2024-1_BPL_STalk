@@ -70,7 +70,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                //api(projects.pycomposeui)
+                api(projects.pycomposeui)
                 api(compose.runtime)
                 api(compose.ui)
                 api(compose.foundation)
