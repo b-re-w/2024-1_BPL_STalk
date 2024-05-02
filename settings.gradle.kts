@@ -23,8 +23,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PyComposeUIApp"
+rootProject.name = "STalk"
 
 include(":app")
-///include(":pycomposeui")
-//include(":python-multiplatform")
+//include(":pycomposeui")

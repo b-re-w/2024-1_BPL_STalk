@@ -1,5 +1,4 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -10,7 +9,7 @@ plugins {
     alias(libs.plugins.chaquo.python)
 }
 
-group = "io.github.thisisthepy"
+group = "io.github.brew.bpl.stalk"
 version = "1.0.0"
 
 chaquopy {
@@ -19,7 +18,7 @@ chaquopy {
     }
     sourceSets {
         getByName("main") {
-            srcDir("src/androidMain/python")
+            srcDirs("src/androidMain/python", "src/commonMain/python")
         }
     }
 }
@@ -56,13 +55,6 @@ kotlin {
     }
     val skikoVersion = libs.versions.skiko.get()
     val skikoTarget = "${targetOs}-${targetArch}"
-
-    js(IR) {
-        browser {
-            useCommonJs()
-            binaries.executable()
-        }
-    }
 
     ios()
     listOf(
@@ -119,19 +111,11 @@ kotlin {
             }
         }
         val desktopTest by getting
-        val jsMain by getting {
-            dependencies {
-                api(compose.html.core)
-                implementation(libs.ktor.js)
-                implementation(libs.ktor.jsonjs)
-            }
-        }
         val iosX64Main by getting
         val iosArm64Main by getting
         val iosSimulatorArm64Main by getting
         val iosMain by getting {
             dependencies {
-                api("io.github.thisisthepy:python-multiplatform:3.11.6.0")
                 implementation(libs.ktor.ios)
             }
             iosX64Main.dependsOn(this)
@@ -200,16 +184,5 @@ compose.desktop {
             packageName = "$group.desktop"
             packageVersion = version.toString()
         }
-    }
-}
-
-compose.experimental {
-    web.application {}
-}
-
-afterEvaluate {
-    rootProject.extensions.configure<NodeJsRootExtension> {
-        versions.webpackDevServer.version = "4.0.0"
-        versions.webpackCli.version = "4.10.0"
     }
 }
