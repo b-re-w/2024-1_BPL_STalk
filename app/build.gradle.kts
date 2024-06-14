@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
 
     alias(libs.plugins.chaquo.python)
+    id("com.google.devtools.ksp").version("2.0.0-1.0.22")
 }
 
 group = "io.github.brew.bpl.stalk"
@@ -45,8 +46,28 @@ kotlin {
             isStatic = true
         }
     }
+
+    val hostOs = System.getProperty("os.name")
+    val isMingwX64 = hostOs.startsWith("Windows")
+    val isArm64 = System.getProperty("os.arch") == "aarch64"
+    val nativeTarget = when {
+        hostOs == "Mac OS X" && !isArm64 -> macosX64("pythonMain")
+        hostOs == "Linux" && !isArm64 -> linuxX64("pythonMain")
+        hostOs == "Mac OS X" && isArm64 -> macosArm64("pythonMain")
+        hostOs == "Linux" && isArm64 -> linuxArm64("pythonMain")
+        isMingwX64 -> mingwX64("pythonMain")
+        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
+    }
     
     sourceSets {
+        val pyMain by getting {
+            dependencies {
+                implementation(project(":kpy-library"))
+            }
+
+            kotlin.srcDir(layout.buildDirectory.dir("generated/ksp/py/pythonMain/kotlin"))
+        }
+
         commonMain.dependencies {
             //api(projects.pycomposeui)
             api(compose.runtime)
@@ -70,10 +91,8 @@ kotlin {
         desktopMain.dependencies {
             api(compose.preview)
             api(compose.desktop.currentOs)
-
-            implementation("org.graalvm.polyglot:polyglot:23.1.2")
-            implementation("org.graalvm.polyglot:python:23.1.2")
         }
+        desktopMain.dependsOn(pyMain)
     }
 }
 
