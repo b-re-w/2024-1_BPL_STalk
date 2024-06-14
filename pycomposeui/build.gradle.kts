@@ -1,35 +1,28 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.library)
-    alias(libs.plugins.jetpack.compose)
-    //alias(libs.plugins.kotlin.cocoapods)
+    alias(libs.plugins.jetbrains.compose)
 
     alias(libs.plugins.chaquo.python)
 }
 
-@OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
 kotlin {
-    targetHierarchy.default()
+    applyDefaultHierarchyTemplate()
 
     androidTarget {
         compilations.all {
             kotlinOptions {
-                jvmTarget = JavaVersion.VERSION_1_8.toString()
+                jvmTarget = JavaVersion.VERSION_11.toString()
             }
         }
     }
 
-    jvm("desktop") {
-        compilations.all {
-            kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
-        }
-    }
+    jvm("desktop")
 
     js(IR) {
         browser()
     }
 
-    ios()
     listOf(
         iosX64(),
         iosArm64(),
@@ -37,6 +30,7 @@ kotlin {
     ).forEach {
         it.binaries.framework {
             baseName = "pycomposeui"
+            isStatic = true
         }
     }
 
@@ -48,8 +42,8 @@ kotlin {
                 api(compose.foundation)
                 api(compose.materialIconsExtended)
                 api(compose.material3)
-                implementation(libs.ktor.core)
-                implementation(libs.koin.core)
+                api(compose.components.resources)
+                api(compose.components.uiToolingPreview)
             }
         }
         val commonTest by getting {
@@ -59,8 +53,6 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
-                api(libs.androidx.appcompat)
-                api(libs.androidx.core)
                 implementation(libs.ktor.jvm)
             }
         }
@@ -68,6 +60,9 @@ kotlin {
             dependencies {
                 api(compose.preview)
                 implementation(libs.ktor.jvm)
+
+                api("org.graalvm.polyglot:polyglot:23.1.2")
+                api("org.graalvm.polyglot:python:23.1.2")
             }
         }
         val desktopTest by getting
@@ -98,16 +93,16 @@ chaquopy {
     }
     sourceSets {
         getByName("main") {
-            srcDir("src/androidMain/python")
+            srcDirs("src/androidMain/python", "src/commonMain/python")
         }
     }
 }
 
 android {
-    namespace = "io.github.thisisthepy.pycomposeui.test"
-    compileSdk = 34
+    namespace = "io.github.thisisthepy.pycomposeui"
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
-        minSdk = 24
+        minSdk = libs.versions.android.minSdk.get().toInt()
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
         }

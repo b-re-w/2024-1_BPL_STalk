@@ -1,10 +1,12 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.application)
-    alias(libs.plugins.jetpack.compose)
-    //alias(libs.plugins.kotlin.cocoapods)
+    alias(libs.plugins.jetbrains.compose)
+    alias(libs.plugins.compose.compiler)
 
     alias(libs.plugins.chaquo.python)
 }
@@ -23,129 +25,71 @@ chaquopy {
     }
 }
 
-@OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
 kotlin {
-    targetHierarchy.default()
-
     androidTarget {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = JavaVersion.VERSION_1_8.toString()
-            }
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-
-    jvm("desktop") {
-        compilations.all {
-            kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
-        }
-        //withJava()
-    }
-    val osName = System.getProperty("os.name")
-    val targetOs = when {
-        osName == "Mac OS X" -> "macos"
-        osName.startsWith("Win") -> "windows"
-        osName.startsWith("Linux") -> "linux"
-        else -> error("Unsupported OS: $osName")
-    }
-    val targetArch = when (val osArch = System.getProperty("os.arch")) {
-        "x86_64", "amd64" -> "x64"
-        "aarch64" -> "arm64"
-        else -> error("Unsupported arch: $osArch")
-    }
-    val skikoVersion = libs.versions.skiko.get()
-    val skikoTarget = "${targetOs}-${targetArch}"
-
-    ios()
+    
+    jvm("desktop")
+    
     listOf(
         iosX64(),
         iosArm64(),
         iosSimulatorArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
-            baseName = "ComposeApp"
+            baseName = "App"
+            isStatic = true
         }
     }
-
+    
     sourceSets {
-        val commonMain by getting {
-            dependencies {
-                api(projects.pycomposeui)
-                api(compose.runtime)
-                api(compose.ui)
-                api(compose.foundation)
-                api(compose.materialIconsExtended)
-                api(compose.material3)
-                implementation(libs.ktor.core)
-                implementation(libs.koin.core)
-            }
+        commonMain.dependencies {
+            //api(projects.pycomposeui)
+            api(compose.runtime)
+            api(compose.foundation)
+            api(compose.material3)
+            api(compose.ui)
+            api(compose.components.resources)
+            api(compose.components.uiToolingPreview)
         }
-        val commonTest by getting {
-            dependencies {
-                implementation(libs.kotlin.test)
-            }
+
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
         }
-        val androidMain by getting {
-            dependencies {
-                api(libs.androidx.appcompat)
-                api(libs.androidx.core)
-                implementation(libs.ktor.jvm)
-                implementation(libs.androidx.activity.compose)
-                implementation(libs.compose.ui.tooling.preview)
-            }
+        
+        androidMain.dependencies {
+            api(compose.preview)
+            api(libs.androidx.activity.compose)
         }
-        val androidUnitTest by getting {
-            dependencies {
-                implementation(libs.androidx.test.junit)
-                implementation(libs.androidx.ui.test.junit)
-                implementation("androidx.test.ext:junit:1.1.3")
-                implementation(libs.androidx.espresso.core)
-            }
-        }
-        val desktopMain by getting {
-            dependencies {
-                implementation(compose.desktop.currentOs)
-                implementation("org.jetbrains.skiko:skiko-awt-runtime-$skikoTarget:$skikoVersion")
-                api(compose.preview)
-                implementation(libs.ktor.jvm)
-            }
-        }
-        val desktopTest by getting
-        val iosX64Main by getting
-        val iosArm64Main by getting
-        val iosSimulatorArm64Main by getting
-        val iosMain by getting {
-            dependencies {
-                implementation(libs.ktor.ios)
-            }
-            iosX64Main.dependsOn(this)
-            iosArm64Main.dependsOn(this)
-            iosSimulatorArm64Main.dependsOn(this)
+
+        val desktopMain by getting
+        desktopMain.dependencies {
+            api(compose.preview)
+            api(compose.desktop.currentOs)
+
+            implementation("org.graalvm.polyglot:polyglot:23.1.2")
+            implementation("org.graalvm.polyglot:python:23.1.2")
         }
     }
 }
 
 android {
     namespace = "$group.android"
-    compileSdk = 34
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
+
     defaultConfig {
         applicationId = "$group.android"
-        minSdk = 24
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = version.toString()
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
-        }
+
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
-        }
-    }
-
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
     sourceSets {
@@ -156,29 +100,33 @@ android {
             resources.srcDirs("src/commonMain/resources")
         }
     }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    buildFeatures {
+        compose = true
+    }
     dependencies {
-        debugImplementation(libs.compose.ui.tooling)
+        debugImplementation(compose.uiTooling)
     }
 }
 
 compose.desktop {
     application {
-        mainClass = "MainKt"
+        mainClass = "Main_DesktopKt"
+
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "$group.desktop"

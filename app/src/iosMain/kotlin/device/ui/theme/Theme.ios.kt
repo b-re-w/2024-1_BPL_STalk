@@ -15,7 +15,7 @@ actual fun AppTheme(
     dynamicColor: Boolean,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) darkColorScheme() else lightColorScheme()
+    val colorScheme = if (darkTheme) colorDark else colorLight
     MaterialTheme(
         colorScheme = colorScheme,
         typography = typography,
@@ -23,7 +23,7 @@ actual fun AppTheme(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = colorScheme.background,
+            color = MaterialTheme.colorScheme.background,
             content = content
         )
     }

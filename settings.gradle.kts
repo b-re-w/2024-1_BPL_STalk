@@ -1,15 +1,17 @@
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 pluginManagement {
     repositories {
-        google()
-        gradlePluginPortal()
-        mavenLocal()
+        google {
+            mavenContent {
+                includeGroupAndSubgroups("androidx")
+                includeGroupAndSubgroups("com.android")
+                includeGroupAndSubgroups("com.google")
+            }
+        }
         mavenCentral()
-
+        gradlePluginPortal()
         maven {
             setUrl("https://jitpack.io")
-            setUrl("https://kotlin.bintray.com/kotlinx")
-            setUrl("https://maven.pkg.jetbrains.space/public/p/compose/dev")
             setUrl("https://chaquo.com/maven-test")
         }
     }
@@ -17,8 +19,13 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
-        google()
-        mavenLocal()
+        google {
+            mavenContent {
+                includeGroupAndSubgroups("androidx")
+                includeGroupAndSubgroups("com.android")
+                includeGroupAndSubgroups("com.google")
+            }
+        }
         mavenCentral()
     }
 }
@@ -26,4 +33,4 @@ dependencyResolutionManagement {
 rootProject.name = "STalk"
 
 include(":app")
-include(":pycomposeui")
+//include(":pycomposeui")

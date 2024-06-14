@@ -1,1 +1,1 @@
-version = "3.11"
+os_type = "Android"

@@ -13,25 +13,32 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.brew.bpl.stalk.app.generated.resources.Res
+import io.github.brew.bpl.stalk.app.generated.resources.SUITE_Variable
+import org.jetbrains.compose.resources.Font
 
 
 val colorDark = darkColorScheme(
-    primary = Color(0xFFBB86FC),
+    primary = Color(0xFF634FA6),
     secondary = Color(0xFF03DAC5),
     tertiary = Color(0xFF3700B3),
-    background = Color(0xffffffff)
+    background = Color(0xFFF5F3FE)
 )
 
 val colorLight = lightColorScheme(
-    primary = Color(0xFF6200EE),
+    primary = Color(0xFF634FA6),
     secondary = Color(0xFF03DAC5),
     tertiary = Color(0xFF3700B3),
-    background = Color(0xffffc778)
+    background = Color(0xFFF5F3FE)
 )
 
-val typography = Typography(
+val suiteFontFamily
+    @Composable get() = FontFamily(Font(Res.font.SUITE_Variable))
+
+val typography
+    @Composable get() = Typography(
     bodyMedium = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = suiteFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp
     )
@@ -46,6 +53,6 @@ val shapes = Shapes(
 @Composable
 expect fun AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 )

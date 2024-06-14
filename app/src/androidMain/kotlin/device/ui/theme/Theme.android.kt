@@ -2,6 +2,8 @@ package device.ui.theme
 
 import android.app.Activity
 import android.os.Build
+import android.view.View
+import android.view.WindowManager
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -10,7 +12,6 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -35,9 +36,7 @@ actual fun AppTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val activity = view.context as Activity
-            activity.window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(activity.window, view).isAppearanceLightStatusBars = darkTheme
+            (view.context as Activity).setStatusBarTransparent(view, !darkTheme)
         }
     }
 
@@ -48,8 +47,23 @@ actual fun AppTheme(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = colorScheme.background,
+            color = MaterialTheme.colorScheme.background,
             content = content
         )
     }
+}
+
+fun Activity.setStatusBarTransparent(localView: View, lightSystemBar: Boolean) {
+    window.apply {
+        setFlags(
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        )
+    }
+    if (Build.VERSION.SDK_INT >= 30) {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+    }
+
+    WindowCompat.getInsetsController(this.window, localView).isAppearanceLightStatusBars = lightSystemBar
+    WindowCompat.getInsetsController(this.window, localView).isAppearanceLightNavigationBars = lightSystemBar
 }
